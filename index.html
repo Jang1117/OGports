@@ -536,12 +536,31 @@ function update() {
   renderSidebar();
   updateStats();
 }
+function inferCommodityKeys(portsObj) {
+  const firstPort = Object.values(portsObj || {}).find(v => v && v.comm && typeof v.comm === 'object');
+  if (!firstPort) return [];
+  return Object.keys(firstPort.comm);
+}
+
 async function loadData() {
   const res = await fetch('./indonesia_og_ports_data_exact.json');
   if (!res.ok) throw new Error(`JSON load failed: ${res.status}`);
   const payload = await res.json();
-  ALL_PORT_DATA = payload.ports;
-  COMMS = payload.commodities.map((key, idx, arr) => ({
+
+  const portsObj = payload?.ports && typeof payload.ports === 'object' ? payload.ports : payload;
+  const commodityKeys = Array.isArray(payload?.commodities) && payload.commodities.length
+    ? payload.commodities
+    : inferCommodityKeys(portsObj);
+
+  if (!portsObj || !Object.keys(portsObj).length) {
+    throw new Error('ports data is missing');
+  }
+  if (!commodityKeys.length) {
+    throw new Error('commodity list is missing');
+  }
+
+  ALL_PORT_DATA = portsObj;
+  COMMS = commodityKeys.map((key, idx, arr) => ({
     key,
     lbl: safeLabel(key),
     col: colorForIndex(idx, arr.length)
@@ -552,7 +571,7 @@ async function loadData() {
 }
 loadData().catch(err => {
   console.error(err);
-  alert('데이터 로드에 실패했습니다.');
+  alert(`데이터 로드에 실패했습니다.\n${err.message}`);
 });
 </script>
 </body>
