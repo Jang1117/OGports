@@ -228,6 +228,7 @@ const OG_COMMODITY_KEYS = [
   'PERTAMAX','RBD PALM OIL','MFO/HSFO','CONDENSATE','METHANOL','HSD','ASPAL/BITUMEN',
   'OLEIN','OMAN BLEND CRUDE OIL','PKO'
 ];
+const ETC_EXCLUDE_KEYS = ['PERTAMAX','HSD','ASPAL/BITUMEN','LPG','METHANOL','MFO/HSFO','FAME','AVTUR','CONDENSATE'];
 
 const map = L.map('map',{center:[-2, 118],zoom:5,zoomControl:true,attributionControl:true});
 
@@ -268,7 +269,24 @@ function fmtM(n){ return ((n||0)/1e6).toFixed(2)+'M'; }
 function portCommVol(code, key) {
   const p = ALL_PORT_DATA[code];
   if (!p || !p.comms || !p.comms[key]) return null;
-  return p.comms[key];
+  const base = p.comms[key];
+  if (key !== '기타') return base;
+
+  const adjusted = { dU: base.dU||0, dS: base.dS||0, iU: base.iU||0, iS: base.iS||0 };
+  ETC_EXCLUDE_KEYS.forEach(exKey => {
+    const ex = p.comms?.[exKey];
+    if (!ex) return;
+    adjusted.dU -= ex.dU || 0;
+    adjusted.dS -= ex.dS || 0;
+    adjusted.iU -= ex.iU || 0;
+    adjusted.iS -= ex.iS || 0;
+  });
+
+  adjusted.dU = Math.max(0, adjusted.dU);
+  adjusted.dS = Math.max(0, adjusted.dS);
+  adjusted.iU = Math.max(0, adjusted.iU);
+  adjusted.iS = Math.max(0, adjusted.iS);
+  return adjusted;
 }
 function sumPortComms(code, keys) {
   let dU=0,dS=0,iU=0,iS=0;
@@ -570,7 +588,9 @@ async function fetchJsonWithFallback(paths) {
 
 async function loadData() {
   const payload = await fetchJsonWithFallback([
+    './indonesia_og_ports_data_merged_with_og_columns.json',
     './indonesia_og_ports_data_exact_rebuilt.json',
+    './indonesia_og_ports_data_exact_rebuilt(1).json',
     './indonesia_og_ports_data_exact.json',
     './indonesia_og_ports_data_exact(1).json',
     './indonesia_og_ports_data.json'
@@ -589,7 +609,10 @@ async function loadData() {
   }
 
   ALL_PORT_DATA = normalizePorts(portsObj);
-  COMMS = commodityKeys.map((key, idx, arr) => ({
+  const sortedCommodityKeys = [...commodityKeys].sort((a, b) =>
+    safeLabel(a).localeCompare(safeLabel(b), 'en', { sensitivity: 'base' })
+  );
+  COMMS = sortedCommodityKeys.map((key, idx, arr) => ({
     key,
     lbl: safeLabel(key),
     col: colorForIndex(idx, arr.length)
