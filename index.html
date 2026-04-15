@@ -172,15 +172,21 @@ body.dark .toggle-track.on{background:rgba(167,139,250,.4)}
     </div>
   </div>
 
-  <!-- MULTI-SELECT TOGGLE + SELECT ALL -->
-  <div style="display:flex;align-items:center;border-bottom:1px solid var(--b1);flex-shrink:0;">
+  <!-- MULTI-SELECT TOGGLE + O&G PRESET + SELECT ALL -->
+  <div style="display:flex;align-items:center;border-bottom:1px solid var(--b1);flex-shrink:0;gap:6px;padding-right:10px;">
     <div id="multi-toggle-row" onclick="toggleMulti()" style="flex:1;border-bottom:none;">
       <div class="toggle-track" id="multi-track"><div class="toggle-thumb"></div></div>
       <span class="toggle-label" id="multi-label">다중 선택</span>
     </div>
+    <button id="og-comm-btn" onclick="toggleOgPreset()" style="
+      font-size:10px;font-family:var(--font);font-weight:600;
+      padding:4px 10px;border-radius:12px;
+      border:1px solid var(--b2);background:transparent;
+      color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+    ">O&amp;G 선택</button>
     <button id="all-comm-btn" onclick="toggleAllComms()" style="
       font-size:10px;font-family:var(--font);font-weight:600;
-      padding:4px 10px;margin-right:10px;border-radius:12px;
+      padding:4px 10px;border-radius:12px;
       border:1px solid var(--b2);background:transparent;
       color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
     ">전체 선택</button>
@@ -206,350 +212,73 @@ body.dark .toggle-track.on{background:rgba(167,139,250,.4)}
 </div>
 </div>
 
-<script>
-// ════════════════════════════════════════════════════════
-// ALL PORT DATA — 259개 항만 하역/선적 실측값 (TON)
-// dU=Domestic하역, dS=Domestic선적, iU=International하역, iS=International선적
-// ════════════════════════════════════════════════════════
-const ALL_PORT_DATA = {
-  IDAAU:{n:"Atapupu",lat:-9.067,lng:124.9,dU:218906,dS:75323,iU:0,iS:0},
-  IDAGK:{n:"ANGGREK",lat:0.767,lng:122.9,dU:433823,dS:407596,iU:4122,iS:102801},
-  IDAGS:{n:"Agats",lat:-5.55,lng:138.117,dU:74791,dS:3839,iU:0,iS:0},
-  IDAHI:{n:"AMAHAI",lat:-3.35,lng:128.917,dU:61477,dS:811,iU:0,iS:0},
-  IDAMQ:{n:"AMBON",lat:-3.695,lng:128.181,dU:3229655,dS:3107962,iU:986711,iS:0},
-  IDAPN:{n:"AMPANA",lat:-0.867,lng:121.567,dU:49768,dS:152227,iU:0,iS:0},
-  IDBAA:{n:"Baranusa",lat:-8.483,lng:124.533,dU:269,dS:635,iU:0,iS:0},
-  IDBAE:{n:"Bajoe",lat:-4.533,lng:120.383,dU:118209,dS:265140,iU:0,iS:0},
-  IDBAI:{n:"BAKAUHENI",lat:-5.867,lng:105.733,dU:13652,dS:544735,iU:0,iS:7515},
-  IDBAU:{n:"BAU-BAU",lat:-5.47,lng:122.61,dU:2493458,dS:9443788,iU:1219178,iS:148435},
-  IDBBE:{n:"Bulukumba_Lappe'e",lat:-5.567,lng:120.183,dU:15843,dS:31734,iU:0,iS:0},
-  IDBBM:{n:"Belang-Belang",lat:-2.983,lng:117.983,dU:269629,dS:662068,iU:1619091,iS:2000},
-  IDBDJ:{n:"BANJARMASIN",lat:-3.319,lng:114.591,dU:121268295,dS:66877682,iU:3658137,iS:95310476},
-  IDBEN:{n:"BENETE",lat:-8.817,lng:116.767,dU:1876944,dS:539795,iU:22851,iS:168921},
-  IDBGG:{n:"BANGGAI",lat:-1.583,lng:123.483,dU:70880,dS:39546,iU:0,iS:0},
-  IDBII:{n:"BAGAN SIAPI-API",lat:2.133,lng:100.817,dU:65663,dS:626234,iU:0,iS:880},
-  IDBIK:{n:"BIAK",lat:-1.183,lng:136.1,dU:503601,dS:505552,iU:0,iS:0},
-  IDBIT:{n:"BITUNG",lat:1.433,lng:125.183,dU:4245834,dS:2264161,iU:207872,iS:507595},
-  IDBJU:{n:"BANYUWANGI _TANJUNG WAN",lat:-8.219,lng:114.369,dU:3997868,dS:2335136,iU:102723,iS:3585},
-  IDBKI:{n:"BENGKALIS",lat:1.483,lng:102.1,dU:585913,dS:0,iU:0,iS:0},
-  IDBKS:{n:"BENGKULU",lat:-3.783,lng:102.25,dU:621470,dS:1256914,iU:0,iS:2037129},
-  IDBLW:{n:"BELAWAN",lat:3.788,lng:98.7,dU:11792611,dS:3428993,iU:5522640,iS:9636424},
-  IDBMU:{n:"BIMA",lat:-8.45,lng:118.717,dU:569438,dS:594181,iU:0,iS:0},
-  IDBNQ:{n:"BRONDONG",lat:-6.87,lng:112.28,dU:14087922,dS:14517749,iU:5252499,iS:3001237},
-  IDBNU:{n:"BUNGKU",lat:-2.68,lng:121.967,dU:96912363,dS:21703249,iU:37961458,iS:20176766},
-  IDBOA:{n:"BENOA",lat:-8.75,lng:115.217,dU:1835260,dS:6863,iU:39321,iS:1324},
-  IDBPN:{n:"BALIKPAPAN",lat:-1.265,lng:116.831,dU:76839778,dS:23098057,iU:7595507,iS:55289555},
-  IDBRO:{n:"BAA",lat:-10.733,lng:123.35,dU:51406,dS:6733,iU:0,iS:0},
-  IDBTG:{n:"BATANG",lat:-6.917,lng:109.733,dU:5582168,dS:16251,iU:0,iS:0},
-  IDBTM:{n:"BATAM",lat:1.152,lng:104.053,dU:11716650,dS:1420444,iU:4430497,iS:2628205},
-  IDBTN:{n:"BANTEN",lat:-5.976,lng:106.099,dU:39566982,dS:11632978,iU:33749412,iS:4764311},
-  IDBUA:{n:"BULA",lat:-3.117,lng:130.467,dU:209865,dS:0,iU:31845,iS:0},
-  IDBUD:{n:"BUNTA",lat:-1.567,lng:122.067,dU:5179,dS:3553644,iU:0,iS:0},
-  IDBUI:{n:"BULI",lat:1.083,lng:128.383,dU:515816,dS:10697940,iU:10850,iS:140},
-  IDBUT:{n:"TANJUNG BUTON",lat:-0.383,lng:102.567,dU:5193200,dS:9916392,iU:4299265,iS:2482829},
-  IDBWN:{n:"Bawean",lat:-5.783,lng:112.667,dU:81859,dS:28201,iU:0,iS:41395},
-  IDBXD:{n:"BADE",lat:-6.867,lng:139.583,dU:276432,dS:604123,iU:0,iS:0},
-  IDBXT:{n:"BONTANG",lat:0.128,lng:117.474,dU:7587887,dS:7209907,iU:243413,iS:13968059},
-  IDBYQ:{n:"BUNYU",lat:3.467,lng:117.867,dU:412292,dS:11655320,iU:20411,iS:3385219},
-  IDCBN:{n:"CIREBON",lat:-6.717,lng:108.567,dU:9030005,dS:83774,iU:101313,iS:29867},
-  IDCEB:{n:"CELUKAN BAWANG",lat:-8.167,lng:114.85,dU:1309279,dS:10590,iU:9312,iS:3535},
-  IDCLG:{n:"CALANG",lat:4.617,lng:95.633,dU:0,dS:0,iU:0,iS:0},
-  IDCLI:{n:"CALABAI",lat:-8.617,lng:118.617,dU:43,dS:233104,iU:0,iS:0},
-  IDCXP:{n:"CILACAP",lat:-7.735,lng:108.999,dU:14226477,dS:5546703,iU:1984128,iS:1184203},
-  IDDAR:{n:"DARUBA",lat:2.083,lng:128.267,dU:67186,dS:10232,iU:0,iS:0},
-  IDDAS:{n:"DABO, SINGKEP ISL",lat:-0.483,lng:104.567,dU:49492,dS:859141,iU:0,iS:8958},
-  IDDJB:{n:"TALANG DUKUH",lat:-1.6,lng:103.62,dU:1902922,dS:14130070,iU:314155,iS:1257794},
-  IDDJJ:{n:"JAYAPURA",lat:-2.533,lng:140.717,dU:1463546,dS:427320,iU:1500,iS:0},
-  IDDOB:{n:"DOBO",lat:-5.767,lng:134.217,dU:133925,dS:109045,iU:0,iS:0},
-  IDDUM:{n:"DUMAI",lat:1.686,lng:101.446,dU:9422101,dS:12187934,iU:3167939,iS:17609069},
-  IDENE:{n:"ENDE",lat:-8.833,lng:121.65,dU:232390,dS:66184,iU:0,iS:0},
-  IDENO:{n:"KUALA ENOK",lat:-0.1,lng:102.95,dU:169775,dS:115175,iU:0,iS:22500},
-  IDFKQ:{n:"FAK FAK",lat:-2.917,lng:132.3,dU:144718,dS:106890,iU:0,iS:0},
-  IDGER:{n:"Geser",lat:-3.883,lng:130.817,dU:1341,dS:212,iU:0,iS:0},
-  IDGIL:{n:"GILIMANUK, BALI",lat:-8.167,lng:114.433,dU:175271,dS:3000,iU:0,iS:0},
-  IDGNG:{n:"GARONGKONG",lat:-4.467,lng:119.917,dU:1544759,dS:810460,iU:89783,iS:148467},
-  IDGNS:{n:"GUNUNG SITOLI",lat:1.283,lng:97.617,dU:193342,dS:52861,iU:0,iS:0},
-  IDGRE:{n:"GRESIK",lat:-7.158,lng:112.656,dU:13043788,dS:6142565,iU:11122303,iS:2266071},
-  IDGTO:{n:"GORONTALO",lat:0.533,lng:123.067,dU:822042,dS:317467,iU:0,iS:0},
-  IDHUU:{n:"Hatu Piru",lat:-3.383,lng:128.483,dU:11921,dS:8152,iU:0,iS:0},
-  IDIRU:{n:"Indramayu",lat:-6.333,lng:108.317,dU:9926313,dS:1984754,iU:2549643,iS:818856},
-  IDJEO:{n:"Jeneponto_Bunging",lat:-5.683,lng:119.733,dU:4813541,dS:28650,iU:225449,iS:87644},
-  IDJEP:{n:"JEPARA",lat:-6.583,lng:110.667,dU:14558003,dS:5501,iU:67006,iS:0},
-  IDJIO:{n:"Jailolo",lat:1.083,lng:127.5,dU:22845,dS:5507,iU:0,iS:0},
-  IDJKT:{n:"TANJUNG PRIOK",lat:-6.105,lng:106.877,dU:14385345,dS:15802267,iU:40890348,iS:22597299},
-  IDJWA:{n:"Juwana",lat:-6.717,lng:111.133,dU:105,dS:124,iU:0,iS:0},
-  IDKAG:{n:"Kota Agung",lat:-5.483,lng:104.933,dU:568763,dS:1818657,iU:235852,iS:37895},
-  IDKAN:{n:"Kotabunan",lat:0.7,lng:124.817,dU:1921,dS:100,iU:0,iS:0},
-  IDKAT:{n:"KALIANGET",lat:-7.05,lng:113.933,dU:18502,dS:31922,iU:0,iS:0},
-  IDKBH:{n:"KALABAHI",lat:-8.217,lng:124.517,dU:109930,dS:129405,iU:0,iS:0},
-  IDKBU:{n:"KOTABARU - BATULICIN",lat:-3.3,lng:116.217,dU:16488204,dS:17582705,iU:1331172,iS:24491433},
-  IDKDI:{n:"KENDARI",lat:-3.967,lng:122.583,dU:3674330,dS:9109540,iU:6402,iS:735},
-  IDKDW:{n:"KENDAWANGAN",lat:-2.533,lng:110.183,dU:9305560,dS:2558503,iU:173653,iS:3971815},
-  IDKGQ:{n:"KUALA GAUNG",lat:-0.367,lng:102.833,dU:86566,dS:696878,iU:0,iS:0},
-  IDKID:{n:"KIJANG",lat:0.867,lng:104.583,dU:11140735,dS:717058,iU:1078767,iS:2629744},
-  IDKJA:{n:"Karimun Jawa",lat:-5.867,lng:110.467,dU:5301,dS:2007,iU:0,iS:0},
-  IDKKS:{n:"KOKAS",lat:-2.75,lng:132.417,dU:2828,dS:16829,iU:0,iS:0},
-  IDKME:{n:"Kuala Mendahara",lat:-1.35,lng:103.367,dU:15604,dS:31311,iU:0,iS:0},
-  IDKNG:{n:"KAIMANA",lat:-3.65,lng:133.75,dU:73395,dS:19153,iU:0,iS:0},
-  IDKNL:{n:"KOLONODALE",lat:-1.983,lng:121.333,dU:22446219,dS:19489726,iU:1758721,iS:1600124},
-  IDKNP:{n:"KINTAP",lat:-3.817,lng:115.167,dU:2583286,dS:6157323,iU:500,iS:6129270},
-  IDKNU:{n:"Karangantu",lat:-6.017,lng:106.133,dU:5526053,dS:0,iU:0,iS:0},
-  IDKOE:{n:"KUPANG",lat:-10.167,lng:123.583,dU:2473377,dS:1135211,iU:174154,iS:106774},
-  IDKOL:{n:"KOLAKA",lat:-4.05,lng:121.583,dU:682175,dS:15313617,iU:22044,iS:171},
-  IDKRO:{n:"Korido",lat:-0.933,lng:135.733,dU:726,dS:500,iU:0,iS:0},
-  IDKSA:{n:"Kuala Semboja",lat:-0.983,lng:117.05,dU:22115950,dS:28920585,iU:8800,iS:0},
-  IDKSB:{n:"KEPULAUAN SERIBU",lat:-5.6,lng:106.55,dU:2738978,dS:2188195,iU:1208429,iS:0},
-  IDKTG:{n:"KETAPANG",lat:-1.833,lng:110.017,dU:902421,dS:1487968,iU:4024,iS:27114},
-  IDKTJ:{n:"KUALATANJUNG",lat:3.367,lng:99.417,dU:972583,dS:278029,iU:501630,iS:1511323},
-  IDKTK:{n:"KUALA TUNGKAL",lat:-0.833,lng:103.467,dU:329195,dS:306747,iU:2304300,iS:131421},
-  IDKUA:{n:"KUALA LANGSA",lat:4.467,lng:97.967,dU:3114,dS:0,iU:0,iS:0},
-  IDKUM:{n:"KUMAI",lat:-2.734,lng:111.738,dU:1937379,dS:1468822,iU:4888388,iS:7703},
-  IDKWG:{n:"Kwandang",lat:0.85,lng:122.483,dU:405389,dS:115731,iU:0,iS:0},
-  IDLAJ:{n:"LABUHAN",lat:-8.25,lng:114.767,dU:3756780,dS:4028237,iU:2747081,iS:52500},
-  IDLBH:{n:"BABANG",lat:-0.6,lng:127.483,dU:121105,dS:37713,iU:0,iS:0},
-  IDLBI:{n:"Bintuhan_Linau",lat:-4.567,lng:103.267,dU:1985,dS:402,iU:0,iS:0},
-  IDLBO:{n:"LABUAN BAJO",lat:-8.483,lng:119.883,dU:245096,dS:65107,iU:0,iS:0},
-  IDLBR:{n:"LEMBAR",lat:-8.717,lng:116.083,dU:2135324,dS:945006,iU:13400,iS:17260},
-  IDLEK:{n:"Leok",lat:-1.317,lng:121.567,dU:45223,dS:57996,iU:0,iS:0},
-  IDLHA:{n:"Lahewa",lat:1.383,lng:97.2,dU:34,dS:5452,iU:0,iS:0},
-  IDLIG:{n:"Teluk Leidong",lat:3.983,lng:100.067,dU:1042,dS:633,iU:0,iS:0},
-  IDLII:{n:"LAIWUI",lat:-1.733,lng:127.783,dU:24342625,dS:2589922,iU:3769784,iS:2575773},
-  IDLKA:{n:"LARANTUKA",lat:-8.35,lng:122.983,dU:114542,dS:71325,iU:0,iS:0},
-  IDLLO:{n:"Labuhan Lombok",lat:-8.567,lng:116.583,dU:2041712,dS:1776084,iU:0,iS:0},
-  IDLMA:{n:"Labuhan Maringgai",lat:-5.617,lng:105.883,dU:2097042,dS:49628,iU:56773,iS:0},
-  IDLPO:{n:"Lapuko",lat:-4.067,lng:122.45,dU:172114,dS:8238984,iU:0,iS:0},
-  IDLSW:{n:"LHOKSEUMAWE",lat:5.183,lng:97.15,dU:878688,dS:999547,iU:2226452,iS:271286},
-  IDLUG:{n:"Likupang",lat:1.617,lng:125.117,dU:2331,dS:1491,iU:0,iS:0},
-  IDLUK:{n:"Labuhan Uki",lat:0.517,lng:99.617,dU:950743,dS:1312039,iU:102617,iS:359721},
-  IDLUW:{n:"LUWUK",lat:-0.933,lng:122.783,dU:2641275,dS:539034,iU:1997173,iS:0},
-  IDLWE:{n:"LEWOLEBA",lat:-8.367,lng:123.017,dU:92419,dS:22838,iU:0,iS:0},
-  IDMAJ:{n:"MAJENE, SV",lat:-3.533,lng:118.967,dU:5,dS:1229,iU:0,iS:0},
-  IDMAK:{n:"MAKASSAR",lat:-5.133,lng:119.417,dU:9128084,dS:9460420,iU:1408415,iS:556652},
-  IDMAN:{n:"MANGGAR",lat:-2.883,lng:108.267,dU:120778,dS:2338781,iU:0,iS:273309},
-  IDMDC:{n:"MANADO",lat:1.5,lng:124.85,dU:4462,dS:53466,iU:0,iS:0},
-  IDMEN:{n:"PEMENANG",lat:-8.317,lng:116.133,dU:711610,dS:16948,iU:0,iS:0},
-  IDMEQ:{n:"MEULABOH",lat:4.15,lng:96.117,dU:808479,dS:73783,iU:0,iS:12526229},
-  IDMGA:{n:"Manggala_Menggala",lat:-4.483,lng:105.25,dU:4593,dS:19549,iU:0,iS:0},
-  IDMGE:{n:"Melonguane",lat:4.0,lng:126.683,dU:34318,dS:57943,iU:0,iS:0},
-  IDMII:{n:"Maccini Baji",lat:-4.817,lng:119.467,dU:1705617,dS:1670171,iU:3315825,iS:0},
-  IDMJU:{n:"MAMUJU",lat:-2.683,lng:118.883,dU:319,dS:668,iU:0,iS:0},
-  IDMKA:{n:"Muara Angke",lat:-6.1,lng:106.767,dU:5107,dS:100,iU:0,iS:0},
-  IDMKI:{n:"Malakoni_P. Enggano",lat:-5.367,lng:102.267,dU:0,dS:0,iU:0,iS:0},
-  IDMKQ:{n:"MERAUKE",lat:-8.467,lng:140.333,dU:937655,dS:262046,iU:0,iS:0},
-  IDMKW:{n:"MANOKWARI",lat:-0.867,lng:134.083,dU:841912,dS:1316535,iU:164203,iS:359680},
-  IDMLH:{n:"MALAHAYATI",lat:5.55,lng:95.283,dU:607433,dS:1135582,iU:66356,iS:26550},
-  IDMLI:{n:"MALILI",lat:-2.567,lng:121.1,dU:935309,dS:3007519,iU:61161,iS:92531},
-  IDMLW:{n:"Molawe",lat:3.833,lng:122.183,dU:41722155,dS:43424257,iU:2670267,iS:2652519},
-  IDMOF:{n:"MAUMERE",lat:-8.617,lng:122.217,dU:545837,dS:338636,iU:0,iS:0},
-  IDMOT:{n:"Marapokot",lat:-8.9,lng:121.067,dU:21873,dS:3500,iU:0,iS:0},
-  IDMRA:{n:"Marunda",lat:-6.09,lng:106.97,dU:15964591,dS:1594923,iU:274835,iS:76053},
-  IDMSB:{n:"MUARA SIBERUT",lat:-1.583,lng:98.883,dU:0,dS:0,iU:0,iS:0},
-  IDMSI:{n:"MASALEMBO",lat:-5.583,lng:114.433,dU:15727,dS:24537,iU:0,iS:0},
-  IDMSJ:{n:"MESUJI",lat:-4.133,lng:105.767,dU:92777,dS:278002,iU:0,iS:0},
-  IDMSK:{n:"MUARA SABAK",lat:-1.083,lng:103.733,dU:3384692,dS:2222731,iU:30896,iS:2380708},
-  IDMUO:{n:"MUNTOK",lat:-2.067,lng:105.167,dU:1591549,dS:1352699,iU:209,iS:59725},
-  IDNAM:{n:"NAMLEA",lat:-3.25,lng:127.1,dU:177005,dS:48280,iU:0,iS:0},
-  IDNBX:{n:"NABIRE",lat:-3.367,lng:135.483,dU:568457,dS:179927,iU:0,iS:0},
-  IDNDA:{n:"BANDANAIRA",lat:-4.517,lng:129.9,dU:782,dS:6726,iU:0,iS:0},
-  IDNIJ:{n:"NIPAH PANJANG",lat:-1.117,lng:103.817,dU:9001,dS:115627,iU:0,iS:0},
-  IDNNX:{n:"NUNUKAN",lat:4.133,lng:117.667,dU:3294351,dS:1445715,iU:23980,iS:603491},
-  IDNPE:{n:"Nusa Penida (Mentigi)",lat:-8.717,lng:115.533,dU:135791,dS:9761,iU:0,iS:0},
-  IDNRE:{n:"NAMROLE",lat:-3.783,lng:126.7,dU:756,dS:415,iU:0,iS:0},
-  IDNTI:{n:"BINTUNI",lat:-2.117,lng:133.517,dU:5898800,dS:487739,iU:5139505,iS:0},
-  IDOOS:{n:"Ogoamas",lat:-1.517,lng:121.35,dU:534,dS:333088,iU:0,iS:0},
-  IDORA:{n:"ORANSBARI",lat:-1.333,lng:133.7,dU:2042,dS:537,iU:0,iS:0},
-  IDPAP:{n:"PARE-PARE",lat:-4.017,lng:119.633,dU:864944,dS:412035,iU:10429,iS:11061},
-  IDPBB:{n:"BADAS",lat:-8.467,lng:117.483,dU:601430,dS:423953,iU:1000,iS:6000},
-  IDPBI:{n:"PADANG BAI",lat:-8.53,lng:115.51,dU:2656699,dS:2035398,iU:58000,iS:0},
-  IDPEI:{n:"Tanjung Silopo_Polewali",lat:-3.417,lng:119.35,dU:7541,dS:4177,iU:0,iS:0},
-  IDPGM:{n:"PAGIMANA",lat:-0.3,lng:122.567,dU:28597,dS:26185,iU:1000,iS:500},
-  IDPGX:{n:"PANGKAL BALAM, BANGKA",lat:-2.1,lng:106.133,dU:2293194,dS:2902786,iU:175050,iS:71743},
-  IDPIN:{n:"Panipahan",lat:2.833,lng:100.333,dU:0,dS:0,iU:0,iS:0},
-  IDPJA:{n:"PULAU JAMPEA",lat:-7.183,lng:120.683,dU:14052,dS:50093,iU:0,iS:0},
-  IDPKN:{n:"PANGKALAN BUN",lat:-2.7,lng:111.617,dU:40651,dS:51765,iU:0,iS:22019},
-  IDPKS:{n:"PANGKALAN SUSU",lat:4.117,lng:98.217,dU:3683934,dS:63000,iU:7493,iS:0},
-  IDPKU:{n:"PEKANBARU",lat:0.507,lng:101.448,dU:12716627,dS:2701871,iU:1942490,iS:4033831},
-  IDPLM:{n:"PALEMBANG",lat:-2.983,lng:104.767,dU:15136484,dS:36771373,iU:1376594,iS:57747803},
-  IDPMB:{n:"PATIMBAN",lat:-6.267,lng:107.75,dU:1774404,dS:164134,iU:98017,iS:167949},
-  IDPMK:{n:"POMAKO",lat:-4.833,lng:136.717,dU:4705312,dS:1107068,iU:275586,iS:1349451},
-  IDPNJ:{n:"PANJANG",lat:-5.476,lng:105.303,dU:7869459,dS:17626487,iU:2869523,iS:16093565},
-  IDPNK:{n:"PONTIANAK",lat:-0.026,lng:109.343,dU:12965505,dS:15240099,iU:835311,iS:1155850},
-  IDPPO:{n:"PALOPO, SULAWESI",lat:-2.983,lng:120.197,dU:947023,dS:64204,iU:42076,iS:11689},
-  IDPPS:{n:"PULANG PISAU_KUALA KAPU",lat:-2.383,lng:114.0,dU:2050929,dS:13270,iU:0,iS:0},
-  IDPRA:{n:"Pelabuhan Ratu",lat:-6.983,lng:106.55,dU:4736681,dS:300,iU:0,iS:0},
-  IDPRI:{n:"Parigi",lat:-0.833,lng:120.183,dU:85502,dS:57432,iU:0,iS:0},
-  IDPRN:{n:"PANARUKAN",lat:-7.7,lng:113.933,dU:1285540,dS:3834602,iU:2379946,iS:41900},
-  IDPRO:{n:"PROBOLINGGO",lat:-7.717,lng:113.217,dU:16318716,dS:514184,iU:111534,iS:166017},
-  IDPSJ:{n:"POSO, SULAWESI",lat:-1.383,lng:120.75,dU:156272,dS:153541,iU:0,iS:0},
-  IDPTA:{n:"Padang tikar",lat:-0.85,lng:109.017,dU:17426,dS:619491,iU:20475,iS:0},
-  IDPTE:{n:"Pulau Tello",lat:-0.533,lng:97.633,dU:15428,dS:72417,iU:0,iS:0},
-  IDPTL:{n:"TELUK PALU",lat:-0.867,lng:119.867,dU:2904067,dS:7874817,iU:14191,iS:1429},
-  IDPUM:{n:"POMALAA, SULAWESI",lat:-4.183,lng:121.583,dU:1663996,dS:5628441,iU:442762,iS:39021},
-  IDRAQ:{n:"RAHA",lat:-4.833,lng:122.717,dU:159425,dS:60971,iU:0,iS:0},
-  IDREM:{n:"REMBANG",lat:-6.7,lng:111.35,dU:3261901,dS:680344,iU:0,iS:0},
-  IDREO:{n:"REO",lat:-8.533,lng:120.583,dU:373832,dS:12066,iU:0,iS:0},
-  IDRGG:{n:"Rangga Ilung",lat:-1.8,lng:115.183,dU:97266133,dS:198,iU:208373,iS:0},
-  IDRGT:{n:"KUALA CINAKU",lat:-0.233,lng:102.367,dU:108534,dS:1357079,iU:0,iS:45576},
-  IDSAA:{n:"Sukamara",lat:-2.717,lng:111.183,dU:63905,dS:283840,iU:0,iS:0},
-  IDSAG:{n:"Senayang",lat:0.6,lng:104.433,dU:4500,dS:9520,iU:711,iS:0},
-  IDSBG:{n:"SABANG",lat:5.883,lng:95.317,dU:22162,dS:59,iU:0,iS:0},
-  IDSDI:{n:"Sadai",lat:-2.933,lng:106.95,dU:2261,dS:716535,iU:0,iS:0},
-  IDSEA:{n:"Seba",lat:-10.483,lng:121.85,dU:149718,dS:420624,iU:0,iS:0},
-  IDSEL:{n:"Tg. Sarang Elang",lat:3.767,lng:99.483,dU:11000,dS:0,iU:0,iS:0},
-  IDSFI:{n:"Sofifi",lat:0.717,lng:127.567,dU:162592,dS:8444,iU:0,iS:0},
-  IDSGQ:{n:"SANGATTA",lat:0.533,lng:117.567,dU:22473897,dS:2425313,iU:14204408,iS:4675642},
-  IDSIK:{n:"SIKAKAP",lat:-2.833,lng:100.1,dU:0,dS:0,iU:0,iS:0},
-  IDSIO:{n:"SOASIO, GALELA",lat:0.667,lng:127.983,dU:143519,dS:5298,iU:0,iS:0},
-  IDSKI:{n:"SANGKULIRANG, KALIMANTAN",lat:0.933,lng:117.583,dU:1914108,dS:16871333,iU:88271,iS:31381581},
-  IDSKL:{n:"SUNDA KELAPA",lat:-6.133,lng:106.817,dU:951738,dS:1999461,iU:0,iS:0},
-  IDSKT:{n:"SAKETA",lat:-0.45,lng:127.733,dU:12166,dS:29794,iU:0,iS:0},
-  IDSLA:{n:"Sinjai_Larea-rea",lat:-5.133,lng:120.267,dU:9920,dS:89155,iU:0,iS:0},
-  IDSLG:{n:"SIBOLGA",lat:1.733,lng:98.783,dU:1085032,dS:51050,iU:0,iS:0},
-  IDSLR:{n:"SELAYAR",lat:-6.117,lng:120.433,dU:108693,dS:73105,iU:0,iS:0},
-  IDSLU:{n:"Sungai Lumpur",lat:-2.633,lng:104.733,dU:4813460,dS:294098,iU:1323094,iS:1846975},
-  IDSMQ:{n:"SAMPIT",lat:-2.533,lng:112.95,dU:2795247,dS:12407532,iU:15230,iS:765443},
-  IDSNE:{n:"Sintete",lat:1.183,lng:109.033,dU:1718573,dS:233561,iU:0,iS:0},
-  IDSNG:{n:"SINABANG",lat:2.467,lng:96.383,dU:44200,dS:854,iU:0,iS:0},
-  IDSNL:{n:"Singkil",lat:2.283,lng:97.817,dU:5983,dS:6108,iU:0,iS:0},
-  IDSNP:{n:"BRANTA_SUMENEP",lat:-6.967,lng:113.867,dU:342452,dS:126602,iU:0,iS:64661},
-  IDSNY:{n:"Sungai Nyamuk",lat:3.867,lng:118.033,dU:224337,dS:103594,iU:40394,iS:70863},
-  IDSON:{n:"SIUBAN",lat:1.783,lng:100.017,dU:0,dS:0,iU:0,iS:0},
-  IDSOQ:{n:"SORUNG",lat:-0.883,lng:131.267,dU:1115415,dS:619677,iU:21145,iS:0},
-  IDSPA:{n:"SELAT PANJANG",lat:1.017,lng:102.717,dU:175389,dS:874446,iU:0,iS:0},
-  IDSPE:{n:"SAPE",lat:-8.567,lng:118.717,dU:22548,dS:58879,iU:0,iS:0},
-  IDSPI:{n:"Sapudi",lat:-6.983,lng:114.283,dU:44793,dS:45850,iU:0,iS:0},
-  IDSPN:{n:"Sapeken",lat:-6.717,lng:115.067,dU:65651,dS:58238,iU:0,iS:32},
-  IDSQN:{n:"SANANA",lat:-2.05,lng:125.983,dU:67392,dS:92328,iU:71575,iS:0},
-  IDSRG:{n:"TANJUNG EMAS, SEMARANG",lat:-6.967,lng:110.417,dU:6012975,dS:1325937,iU:7448038,iS:4549531},
-  IDSRI:{n:"SAMARINDA",lat:-0.502,lng:117.154,dU:38601139,dS:101005044,iU:314529,iS:67416844},
-  IDSRU:{n:"Sirombu",lat:0.683,lng:97.617,dU:7018,dS:0,iU:0,iS:0},
-  IDSTU:{n:"SATUI",lat:-3.733,lng:115.6,dU:3096104,dS:31901582,iU:2094,iS:48236975},
-  IDSUB:{n:"TANJUNG PERAK",lat:-7.21,lng:112.734,dU:18065609,dS:23025435,iU:18194987,iS:10655167},
-  IDSUQ:{n:"SUNGAI GUNTUNG, SUMATRA",lat:0.317,lng:103.217,dU:850111,dS:639025,iU:38357,iS:200354},
-  IDSUS:{n:"SUSOH, SUMATRA",lat:3.733,lng:96.817,dU:0,dS:169643,iU:0,iS:0},
-  IDSWA:{n:"Siwa_Bangsalae",lat:-3.967,lng:120.433,dU:74623,dS:102240,iU:0,iS:0},
-  IDSXK:{n:"SAUMLAKI",lat:-7.983,lng:131.3,dU:119579,dS:51447,iU:0,iS:0},
-  IDTAA:{n:"Tilamuta",lat:0.55,lng:122.383,dU:270830,dS:122237,iU:63397,iS:0},
-  IDTAN:{n:"TANJUNG UBAN",lat:1.05,lng:104.217,dU:1807539,dS:3719681,iU:2284656,iS:744957},
-  IDTBE:{n:"Tanjung Beringin",lat:3.767,lng:98.817,dU:111150,dS:41703,iU:0,iS:0},
-  IDTBO:{n:"TOBELO",lat:1.717,lng:128.017,dU:426117,dS:317444,iU:3450,iS:1400},
-  IDTBR:{n:"TELUK BAYUR",lat:-0.98,lng:100.37,dU:3457818,dS:2819416,iU:1248094,iS:4869901},
-  IDTDA:{n:"Teluk Dalam",lat:0.567,lng:97.817,dU:35200,dS:5527,iU:0,iS:0},
-  IDTEG:{n:"TEGAL",lat:-6.867,lng:109.133,dU:555,dS:21875,iU:0,iS:0},
-  IDTGU:{n:"Telaga Biru",lat:1.0,lng:108.983,dU:34276,dS:419461,iU:0,iS:36625},
-  IDTHA:{n:"TAHUNA",lat:3.617,lng:125.483,dU:113082,dS:36007,iU:0,iS:39},
-  IDTHR:{n:"TANA PASER",lat:1.217,lng:116.083,dU:636655,dS:11903631,iU:0,iS:15216842},
-  IDTJB:{n:"TANJUNG BALAI KARIMUN",lat:1.033,lng:103.433,dU:12395690,dS:324546,iU:2297224,iS:3686124},
-  IDTJQ:{n:"TANJUNG PANDAN",lat:-2.733,lng:107.75,dU:946855,dS:2236864,iU:2300,iS:313891},
-  IDTJS:{n:"TANJUNG SELOR",lat:2.833,lng:117.367,dU:1310122,dS:3741806,iU:566652,iS:3381028},
-  IDTLI:{n:"TOLITOLI",lat:1.033,lng:120.8,dU:251221,dS:125876,iU:0,iS:0},
-  IDTLN:{n:"TEMBILAHAN",lat:-0.333,lng:103.167,dU:530232,dS:921978,iU:0,iS:0},
-  IDTLU:{n:"TULEHU",lat:-3.583,lng:128.333,dU:131843,dS:16777,iU:0,iS:0},
-  IDTMD:{n:"Tanjung Medang",lat:1.617,lng:102.15,dU:55505,dS:405571,iU:0,iS:0},
-  IDTMO:{n:"TELOK MELANO",lat:1.733,lng:110.017,dU:190850,dS:2109852,iU:3967,iS:0},
-  IDTMP:{n:"TAREMPA",lat:3.2,lng:106.267,dU:1206585,dS:370587,iU:93948,iS:1618},
-  IDTNJ:{n:"TANJUNG PINANG",lat:0.917,lng:104.467,dU:222047,dS:40317,iU:153,iS:208},
-  IDTPK:{n:"TAPAKTUAN, SUMATRA",lat:3.267,lng:97.183,dU:34500,dS:59774,iU:0,iS:0},
-  IDTRE:{n:"Tanjung Redep",lat:2.1,lng:117.483,dU:2827851,dS:14801009,iU:7143,iS:34979528},
-  IDTRK:{n:"TARAKAN",lat:3.317,lng:117.633,dU:15839489,dS:6685483,iU:70997,iS:10295836},
-  IDTSH:{n:"TANJUNG BALAI ASAHAN",lat:2.967,lng:99.8,dU:10121,dS:40573,iU:38462,iS:124611},
-  IDTSX:{n:"TANJUNG SANTAN",lat:0.083,lng:117.483,dU:71683,dS:1773731,iU:0,iS:0},
-  IDTTE:{n:"TERNATE",lat:0.783,lng:127.367,dU:784913,dS:321046,iU:0,iS:0},
-  IDTTN:{n:"TELUK SIGINTUNG",lat:-2.733,lng:111.717,dU:15228,dS:5414,iU:0,iS:0},
-  IDTUA:{n:"TUAL",lat:-5.633,lng:132.75,dU:589261,dS:451131,iU:0,iS:0},
-  IDTXM:{n:"TEMINABUAN",lat:-1.45,lng:132.017,dU:27767,dS:21193,iU:0,iS:0},
-  IDTZD:{n:"AMURANG",lat:1.2,lng:124.583,dU:687213,dS:13052,iU:0,iS:197330},
-  IDUSI:{n:"Ulu Siau",lat:2.717,lng:125.367,dU:13812,dS:6946,iU:0,iS:0},
-  IDWCI:{n:"WANCI",lat:-5.3,lng:123.583,dU:46523,dS:13383,iU:0,iS:0},
-  IDWED:{n:"WEDA",lat:0.35,lng:128.267,dU:86532969,dS:14138918,iU:20396541,iS:5259217},
-  IDWGP:{n:"WAINGAPU",lat:-9.65,lng:120.267,dU:501875,dS:296603,iU:0,iS:0},
-  IDWII:{n:"Wini",lat:-9.35,lng:124.467,dU:96027,dS:37960,iU:0,iS:25000},
-  IDWIO:{n:"Waikelo",lat:-9.433,lng:119.133,dU:72741,dS:1174,iU:0,iS:0},
-  IDWNI:{n:"Wonreli",lat:-7.883,lng:131.45,dU:71631,dS:762698,iU:0,iS:0},
-  IDWRN:{n:"WAREN",lat:-1.883,lng:136.267,dU:8190,dS:948,iU:0,iS:0},
-  IDWSA:{n:"WAISAI",lat:-0.483,lng:130.883,dU:37948,dS:3831,iU:0,iS:5},
-  IDWSR:{n:"WASIOR",lat:-2.717,lng:134.283,dU:45940,dS:64643,iU:0,iS:0},
-  IDZRI:{n:"SERUI",lat:-1.883,lng:136.233,dU:485292,dS:90991,iU:0,iS:54479},
-  IDZRM:{n:"SARMI",lat:-1.867,lng:138.75,dU:3637,dS:74203,iU:0,iS:0}
-};
 
-// Commodity colors & labels
-const COMMS = [
-  {key:'CPO',            lbl:'CPO',            col:'#F59E0B'},
-  {key:'PERTALITE',      lbl:'PERTALITE',       col:'#10B981'},
-  {key:'LPG',            lbl:'LPG',             col:'#3B82F6'},
-  {key:'CRUDE_OIL',      lbl:'CRUDE OIL',       col:'#94A3B8'},
-  {key:'FAME',           lbl:'FAME',            col:'#84CC16'},
-  {key:'BIO_SOLAR',      lbl:'BIO SOLAR',       col:'#22D3EE'},
-  {key:'AVTUR',          lbl:'AVTUR',           col:'#8B5CF6'},
-  {key:'RBD_PALM_OLEIN', lbl:'RBD PALM OLEIN',  col:'#F97316'},
-  {key:'PERTAMAX',       lbl:'PERTAMAX',        col:'#EC4899'},
-  {key:'RBD_PALM_OIL',   lbl:'RBD PALM OIL',   col:'#EF4444'},
-  {key:'MFO_HSFO',       lbl:'MFO/HSFO',        col:'#A78BFA'},
-  {key:'CONDENSATE',     lbl:'CONDENSATE',      col:'#FCD34D'},
-  {key:'METHANOL',       lbl:'METHANOL',        col:'#67E8F9'},
-  {key:'HSD',            lbl:'HSD',             col:'#D97706'},
-  {key:'ASPAL_BITUMEN',  lbl:'ASPAL/BITUMEN',   col:'#9CA3AF'},
+<script>
+let ALL_PORT_DATA = {};
+let COMMS = [];
+let circles = [];
+let selPort = null;
+let PORTS = [];
+let mode = 'total';
+let sub  = 'both';
+let multiMode = false;
+let selComms = new Set();
+const OG_COMMODITY_KEYS = [
+  'CPO','PERTALITE','LPG','CRUDE OIL','FAME','BIO SOLAR','AVTUR','RBD PALM OLEIN',
+  'PERTAMAX','RBD PALM OIL','MFO/HSFO','CONDENSATE','METHANOL','HSD','ASPAL/BITUMEN',
+  'OLEIN','OMAN BLEND CRUDE OIL','PKO'
 ];
 
-// Commodity national totals (for commodity filter future use)
-const COMM_NAT = {
-  CPO:           {dU:12247087,dS:15150491,iU:36500,   iS:944880  },
-  PERTALITE:     {dU:9469608, dS:10268880,iU:5254651, iS:417668  },
-  LPG:           {dU:6662535, dS:7008696, iU:5347864, iS:58524   },
-  CRUDE_OIL:     {dU:6398630, dS:9295629, iU:1716860, iS:1597851 },
-  FAME:          {dU:6776449, dS:5475433, iU:36082,   iS:14883   },
-  BIO_SOLAR:     {dU:6194050, dS:5771471, iU:424,     iS:0       },
-  AVTUR:         {dU:3956957, dS:4795905, iU:1149840, iS:0       },
-  RBD_PALM_OLEIN:{dU:950906,  dS:1204327, iU:218759,  iS:7466675 },
-  PERTAMAX:      {dU:2245030, dS:2640683, iU:1435159, iS:472788  },
-  RBD_PALM_OIL:  {dU:106600,  dS:98096,   iU:110034,  iS:4279763 },
-  MFO_HSFO:      {dU:1792978, dS:2053730, iU:2064,    iS:334554  },
-  CONDENSATE:    {dU:585374,  dS:577076,  iU:1055676, iS:488623  },
-  METHANOL:      {dU:567622,  dS:591624,  iU:1332835, iS:115202  },
-  HSD:           {dU:1128393, dS:1183242, iU:120405,  iS:1000    },
-  ASPAL_BITUMEN: {dU:108487,  dS:79669,   iU:198910,  iS:32289   },
+const map = L.map('map',{center:[-2, 118],zoom:5,zoomControl:true,attributionControl:true});
+
+const TILES = {
+  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19
+  }),
+  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19
+  }),
 };
-const ALL_GRAND = {dU:59195705,dS:66274601,iU:18154960,iS:16471502};
+let isDark = false;
+TILES.light.addTo(map);
 
-// Build port share for proportional commodity distribution
-const PORT_SHARE = {};
-Object.keys(ALL_PORT_DATA).forEach(code => {
-  const p = ALL_PORT_DATA[code];
-  PORT_SHARE[code] = {
-    dU: ALL_GRAND.dU ? p.dU / ALL_GRAND.dU : 0,
-    dS: ALL_GRAND.dS ? p.dS / ALL_GRAND.dS : 0,
-    iU: ALL_GRAND.iU ? p.iU / ALL_GRAND.iU : 0,
-    iS: ALL_GRAND.iS ? p.iS / ALL_GRAND.iS : 0,
-  };
-});
-
-// Port lookup helper (n = name, lat, lng, dU, dS, iU, iS)
-const PORT_META = ALL_PORT_DATA; // alias for buildPorts compat
+function colorForIndex(i, total) {
+  const hue = Math.round((i * 360 / Math.max(total, 1)) % 360);
+  return `hsl(${hue} 72% 55%)`;
+}
+function safeLabel(key) {
+  return key === '기타' ? '기타' : key;
+}
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  if (isDark) {
+    TILES.light.remove();
+    TILES.dark.addTo(map);
+    document.getElementById('theme-btn').textContent = '☀️ 라이트';
+  } else {
+    TILES.dark.remove();
+    TILES.light.addTo(map);
+    document.getElementById('theme-btn').textContent = '🌙 다크';
+  }
+}
+function fmt(n){ return (n||0).toLocaleString('ko-KR'); }
+function fmtM(n){ return ((n||0)/1e6).toFixed(2)+'M'; }
 
 function portCommVol(code, key) {
-  const sh = PORT_SHARE[code];
-  const nat = COMM_NAT[key];
-  if (!sh || !nat) return null;
-  return {
-    dU: Math.round(nat.dU * sh.dU),
-    dS: Math.round(nat.dS * sh.dS),
-    iU: Math.round(nat.iU * sh.iU),
-    iS: Math.round(nat.iS * sh.iS),
-  };
+  const p = ALL_PORT_DATA[code];
+  if (!p || !p.comms || !p.comms[key]) return null;
+  return p.comms[key];
 }
-
 function sumPortComms(code, keys) {
   let dU=0,dS=0,iU=0,iS=0;
   keys.forEach(key => {
     const v = portCommVol(code, key);
-    if (v) { dU+=v.dU; dS+=v.dS; iU+=v.iU; iS+=v.iS; }
+    if (v) { dU += v.dU||0; dS += v.dS||0; iU += v.iU||0; iS += v.iS||0; }
   });
   return {dU,dS,iU,iS};
 }
-
 function buildPorts(keys) {
-  // When all comms selected, use raw data directly for accuracy
   const allKeys = COMMS.map(c=>c.key);
   const isAll = keys.length === allKeys.length;
   return Object.keys(ALL_PORT_DATA).map(code => {
@@ -564,21 +293,6 @@ function buildPorts(keys) {
     return {code, name:meta.n, lat:meta.lat, lng:meta.lng, ...t};
   }).filter(Boolean);
 }
-
-// ════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════
-let mode = 'total';
-let sub  = 'both';
-let multiMode = false;        // single vs multi select
-let selComms = new Set(['CPO']); // default: CPO only
-let circles = [];
-let selPort = null;
-let PORTS = [];
-
-// ════════════════════════════════════════════════════════
-// VOLUME HELPERS
-// ════════════════════════════════════════════════════════
 function vol(p) {
   let d=0,i=0;
   if (sub!=='loading')   { d+=p.dU||0; i+=p.iU||0; }
@@ -596,73 +310,31 @@ function getColor(p) {
   if (d>0 && i>0) return '#A78BFA';
   return i>d ? '#38AFFF' : '#22D3A5';
 }
-function fmt(n){ return (n||0).toLocaleString('ko-KR'); }
-function fmtM(n){ return ((n||0)/1e6).toFixed(2)+'M'; }
-
-// ════════════════════════════════════════════════════════
-// MAP + THEME
-// ════════════════════════════════════════════════════════
-// Indonesia roughly spans 95°E–141°E, 6°N–11°S
-// center ~-2°, 118°E; zoom 4 fits it on most screens
-const map = L.map('map',{center:[-2, 118],zoom:5,zoomControl:true,attributionControl:true});
-
-const TILES = {
-  light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19
-  }),
-  dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19
-  }),
-};
-let isDark = false;
-TILES.light.addTo(map);
-
-function toggleTheme() {
-  isDark = !isDark;
-  document.body.classList.toggle('dark', isDark);
-  if (isDark) {
-    TILES.light.remove();
-    TILES.dark.addTo(map);
-    document.getElementById('theme-btn').textContent = '☀️ 라이트';
-  } else {
-    TILES.dark.remove();
-    TILES.light.addTo(map);
-    document.getElementById('theme-btn').textContent = '🌙 다크';
-  }
-}
-
 function ttHTML(p) {
   const selArr = [...selComms];
   const tags = selArr.slice(0,8).map(k=>{
     const c = COMMS.find(x=>x.key===k);
     return `<span class="tt-tag" style="background:${c.col}20;color:${c.col};border:1px solid ${c.col}40">${c.lbl}</span>`;
   }).join('') + (selArr.length>8 ? `<span class="tt-tag" style="background:#fff1;color:#7A8FB5">+${selArr.length-8}</span>` : '');
-  const d=domVol(p), i=intlVol(p);
+  const total = (p.dU||0) + (p.dS||0) + (p.iU||0) + (p.iS||0);
   return `<div class="tt-name">🛢 ${p.name} <span style="font-size:9px;color:#7A8FB5;font-weight:400">(${p.code})</span></div>
 <div class="tt-tags">${tags}</div>
 <div class="tt-grid">
-  <div class="tt-cell"><div class="tt-cl">🟢 DOM 하역</div><div class="tt-cv" style="color:#22D3A5">${fmt(sub==='loading'?0:p.dU||0)}</div></div>
-  <div class="tt-cell"><div class="tt-cl">🟢 DOM 선적</div><div class="tt-cv" style="color:#22D3A5">${fmt(sub==='unloading'?0:p.dS||0)}</div></div>
-  <div class="tt-cell"><div class="tt-cl">🔵 INTL 하역</div><div class="tt-cv" style="color:#38AFFF">${fmt(sub==='loading'?0:p.iU||0)}</div></div>
-  <div class="tt-cell"><div class="tt-cl">🔵 INTL 선적</div><div class="tt-cv" style="color:#38AFFF">${fmt(sub==='unloading'?0:p.iS||0)}</div></div>
+  <div class="tt-cell"><div class="tt-cl">🟢 DOM 하역</div><div class="tt-cv" style="color:#22D3A5">${fmt(p.dU||0)}</div></div>
+  <div class="tt-cell"><div class="tt-cl">🟢 DOM 선적</div><div class="tt-cv" style="color:#22D3A5">${fmt(p.dS||0)}</div></div>
+  <div class="tt-cell"><div class="tt-cl">🔵 INTL 하역</div><div class="tt-cv" style="color:#38AFFF">${fmt(p.iU||0)}</div></div>
+  <div class="tt-cell"><div class="tt-cl">🔵 INTL 선적</div><div class="tt-cv" style="color:#38AFFF">${fmt(p.iS||0)}</div></div>
 </div>
 <hr class="tt-sep">
-<div class="tt-foot"><span class="tt-fl">선택 화물 합계</span><span class="tt-fv">${fmt(d+i)} TON</span></div>`;
+<div class="tt-foot"><span class="tt-fl">선택 화물 전체 합계</span><span class="tt-fv">${fmt(total)} TON</span></div>`;
 }
-
 function renderCircles() {
   circles.forEach(c=>c.remove()); circles=[];
   if (!PORTS.length) return;
-
-  // CRITICAL: compute maxVol from CURRENT ports with CURRENT vol() function
   const maxV = Math.max(...PORTS.map(p=>vol(p)), 1);
-
-  // Sort small→large so larger circles render on top
   [...PORTS].sort((a,b)=>vol(a)-vol(b)).forEach(p=>{
     const v = vol(p);
     if (v===0) return;
-    // r = 4 + sqrt(portVol/maxPortVol) * (70-4)
-    // This means the biggest port gets r=70, smallest gets r=4
     const r = 4 + Math.sqrt(v/maxV) * 66;
     const color = getColor(p);
     const c = L.circleMarker([p.lat,p.lng],{
@@ -677,10 +349,9 @@ function renderCircles() {
     c.addTo(map); circles.push(c);
   });
 }
-
 function renderSidebar() {
   const sorted=[...PORTS].sort((a,b)=>vol(b)-vol(a));
-  const maxV=vol(sorted[0])||1;
+  const maxV=sorted.length ? (vol(sorted[0])||1) : 1;
   const list=document.getElementById('port-list'); list.innerHTML='';
   let rank=0;
   sorted.forEach(p=>{
@@ -702,7 +373,6 @@ function renderSidebar() {
     list.appendChild(row);
   });
 }
-
 function updateStats() {
   let d=0,i=0;
   PORTS.forEach(p=>{d+=domVol(p);i+=intlVol(p);});
@@ -710,14 +380,18 @@ function updateStats() {
   document.getElementById('st-intl').textContent=fmtM(i)+' TON';
   document.getElementById('st-cnt').textContent=PORTS.length+'개';
 }
-
-// ════════════════════════════════════════════════════════
-// COMMODITY UI
-// ════════════════════════════════════════════════════════
+function commodityTotals(key) {
+  let dU=0,dS=0,iU=0,iS=0;
+  Object.values(ALL_PORT_DATA).forEach(p=>{
+    const v = p.comms?.[key];
+    if (v) { dU += v.dU||0; dS += v.dS||0; iU += v.iU||0; iS += v.iS||0; }
+  });
+  return {dU,dS,iU,iS};
+}
 function buildCommUI() {
   const list=document.getElementById('comm-list'); list.innerHTML='';
   COMMS.forEach(c=>{
-    const nat=COMM_NAT[c.key];
+    const nat=commodityTotals(c.key);
     const tot=(nat.dU+nat.dS+nat.iU+nat.iS)/1e6;
     const on=selComms.has(c.key);
     const row=document.createElement('div');
@@ -737,10 +411,8 @@ function buildCommUI() {
   });
   applyDisabledState();
 }
-
 function handleCommClick(key) {
   if (multiMode) {
-    // Multi: toggle freely, min 1
     if (selComms.has(key)) {
       if (selComms.size===1) return;
       selComms.delete(key);
@@ -748,35 +420,53 @@ function handleCommClick(key) {
       selComms.add(key);
     }
   } else {
-    // Single: always exactly one
     selComms = new Set([key]);
   }
   refreshCommUI();
   rebuild();
 }
-
+function setMultiModeUI() {
+  document.getElementById('multi-track').classList.toggle('on', multiMode);
+  document.getElementById('multi-label').style.color = multiMode ? 'var(--purple)' : '';
+}
+function getOgPresetKeys() {
+  const available = new Set(COMMS.map(c=>c.key));
+  return OG_COMMODITY_KEYS.filter(key => available.has(key));
+}
+function toggleOgPreset() {
+  const ogKeys = getOgPresetKeys();
+  if (!ogKeys.length) return;
+  const isOgOnly = selComms.size === ogKeys.length && ogKeys.every(key => selComms.has(key));
+  if (isOgOnly) {
+    selComms = new Set([ogKeys[0]]);
+    multiMode = false;
+  } else {
+    selComms = new Set(ogKeys);
+    multiMode = true;
+  }
+  setMultiModeUI();
+  refreshCommUI();
+  rebuild();
+}
 function toggleAllComms() {
-  // 전체 선택이면 해제(첫번째만), 아니면 전체 선택
   const allKeys = COMMS.map(c=>c.key);
   const isAll = selComms.size === allKeys.length;
   if (isAll) {
     selComms = new Set([allKeys[0]]);
+    multiMode = false;
   } else {
     selComms = new Set(allKeys);
-    // 다중 선택 모드 자동 활성화
-    if (!multiMode) {
-      multiMode = true;
-      document.getElementById('multi-track').classList.add('on');
-      document.getElementById('multi-label').style.color = 'var(--purple)';
-    }
+    multiMode = true;
   }
+  setMultiModeUI();
   refreshCommUI();
   rebuild();
 }
-
 function refreshCommUI() {
   const allKeys = COMMS.map(c=>c.key);
+  const ogKeys = getOgPresetKeys();
   const isAll = selComms.size === allKeys.length;
+  const isOgOnly = ogKeys.length && selComms.size === ogKeys.length && ogKeys.every(key => selComms.has(key));
   document.querySelectorAll('.comm-row').forEach(row=>{
     const key=row.dataset.key;
     const on=selComms.has(key);
@@ -787,7 +477,13 @@ function refreshCommUI() {
       row.classList.remove('disabled');
     }
   });
-  // Update all-button label & style
+  const ogBtn = document.getElementById('og-comm-btn');
+  if (ogBtn) {
+    ogBtn.textContent = isOgOnly ? 'O&G 해제' : 'O&G 선택';
+    ogBtn.style.borderColor = isOgOnly ? 'var(--purple)' : '';
+    ogBtn.style.color = isOgOnly ? 'var(--purple)' : '';
+    ogBtn.style.background = isOgOnly ? 'rgba(76,29,149,.1)' : '';
+  }
   const btn = document.getElementById('all-comm-btn');
   if (btn) {
     btn.textContent = isAll ? '전체 해제' : '전체 선택';
@@ -796,7 +492,6 @@ function refreshCommUI() {
     btn.style.background = isAll ? 'rgba(76,29,149,.1)' : '';
   }
 }
-
 function applyDisabledState() {
   document.querySelectorAll('.comm-row').forEach(row=>{
     if (!multiMode) {
@@ -806,15 +501,10 @@ function applyDisabledState() {
     }
   });
 }
-
 function toggleMulti() {
   multiMode = !multiMode;
-  const track=document.getElementById('multi-track');
-  const label=document.getElementById('multi-label');
-  track.classList.toggle('on', multiMode);
-  label.style.color = multiMode ? 'var(--purple)' : '';
+  setMultiModeUI();
   if (!multiMode && selComms.size > 1) {
-    // Switching back to single: keep only first selected
     const first=[...selComms][0];
     selComms=new Set([first]);
     refreshCommUI();
@@ -823,18 +513,10 @@ function toggleMulti() {
     applyDisabledState();
   }
 }
-
-// ════════════════════════════════════════════════════════
-// CONTROLS
-// ════════════════════════════════════════════════════════
 function setMode(m) {
   mode=m;
-  ['total','domestic','international'].forEach(k=>{
-    const b=document.getElementById('mb-'+k);
-    b.className='rbtn'+(k===m?' on-'+k[0]:'');
-  });
-  document.getElementById('mb-total').className     = 'rbtn'+(m==='total'?' on-t':'');
-  document.getElementById('mb-domestic').className  = 'rbtn'+(m==='domestic'?' on-d':'');
+  document.getElementById('mb-total').className = 'rbtn'+(m==='total'?' on-t':'');
+  document.getElementById('mb-domestic').className = 'rbtn'+(m==='domestic'?' on-d':'');
   document.getElementById('mb-international').className='rbtn'+(m==='international'?' on-i':'');
   update();
 }
@@ -854,12 +536,24 @@ function update() {
   renderSidebar();
   updateStats();
 }
-
-// ════════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════════
-buildCommUI();
-rebuild();
+async function loadData() {
+  const res = await fetch('./indonesia_og_ports_data_exact.json');
+  if (!res.ok) throw new Error(`JSON load failed: ${res.status}`);
+  const payload = await res.json();
+  ALL_PORT_DATA = payload.ports;
+  COMMS = payload.commodities.map((key, idx, arr) => ({
+    key,
+    lbl: safeLabel(key),
+    col: colorForIndex(idx, arr.length)
+  }));
+  selComms = new Set([COMMS.find(c => c.key === 'CPO')?.key || COMMS[0].key]);
+  buildCommUI();
+  rebuild();
+}
+loadData().catch(err => {
+  console.error(err);
+  alert('데이터 로드에 실패했습니다.');
+});
 </script>
 </body>
 </html>
